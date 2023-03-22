@@ -9,6 +9,33 @@
 
 This repository contains information about the Vision-Language Understanding Evaluation (VLUE) benchmark (ICML 2022), instructions for downloading data, and implementations of baseline systems for the benchmark.
 
+# Advanced Deep Learning Course Project
+
+Timeline and division of work :
+
+Literature survey - 17th Feb
+
+Brainstorming of ideas - 23rd Feb
+
+Implementation of baselines and feasibility study - 1st March
+
+Brainstorming on future directions - 8th March
+
+Final ideation - 15th March
+
+Implementation and Analysis - 20th March -  10th April
+
+Error analysis - 17th April
+
+Report writing - 25th April
+
+
+Sanketh Rangreji: Literature survey, Discussion and brainstorming, implementation of baselines, explore domain adaptation based approaches and it's implementation/feasibility
+
+Anubha Kabra: Literature survey, Discussion and brainstorming, implementation of baselines, explore parameter efficient transfer learning approaches and it's implementation/feasibility
+
+Aviv Bick: Literature survey, Discussion and brainstorming, Midterm report writing, explore approaches out-of-distribution shift mitigation and it's implementation/feasibility
+
 # Introduction
 
 The Vision-Language Understanding Evaluation (VLUE) benchmark is a benchmark for the evaluation of the generalization ability and efficiency-performance trade-off of pre-trained vision-language models. It benchmarks the performance of popular pre-trained vision-language models on representative Vision-Language tasks and also provides a suite of newly croudsourced out-of-distribution (OOD) test sets for each of the tasks, which are used to benchmark the true generalization/transfer ability of pre-trained vision-language models.
