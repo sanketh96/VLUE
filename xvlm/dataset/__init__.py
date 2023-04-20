@@ -10,7 +10,7 @@ from dataset.nlvr_dataset import nlvr_dataset
 from dataset.vqa_dataset import vqa_dataset
 from dataset.grounding_dataset import grounding_dataset, grounding_dataset_bbox
 from dataset.coco_karpathy_dataset import coco_karpathy_train, coco_karpathy_train_scst, coco_karpathy_caption_eval
-
+from dataset.wit_dataset import wit_train_dataset, wit_eval_dataset
 
 from dataset.randaugment import RandomAugment
 
@@ -163,6 +163,18 @@ def create_dataset(dataset, config, evaluate=False):
         test_dataset = coco_karpathy_caption_eval(test_transform, config['image_root'], config['test_file'], 'test')
 
         return train_dataset, val_dataset, test_dataset
+    elif dataset == 'multitask':
+        nlvr_test_dataset = nlvr_dataset(config['test_file'], test_transform, config['image_root'])
+        if evaluate:
+            return None, None, nlvr_test_dataset
+
+        nlvr_train_dataset = nlvr_dataset(config['train_file'], train_transform, config['image_root'])
+        nlvr_val_dataset = nlvr_dataset(config['val_file'], test_transform, config['image_root'])
+
+        WIT_train_dataset = wit_train_dataset(config['train_file'], train_transform)
+        WIT_test_dataset = wit_eval_dataset(config['val_file'], test_transform)
+
+        return nlvr_train_dataset, nlvr_val_dataset, WIT_train_dataset, WIT_test_dataset
 
     else:
         raise NotImplementedError(f"dataset == {dataset}")
