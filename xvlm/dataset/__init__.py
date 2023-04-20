@@ -166,13 +166,14 @@ def create_dataset(dataset, config, evaluate=False):
     elif dataset == 'multitask':
         nlvr_test_dataset = nlvr_dataset(config['test_file'], test_transform, config['image_root'])
         if evaluate:
+            # Because we only want to evaluate on NLVR2, since WIT is our auxilliary task
             return None, None, nlvr_test_dataset
 
-        nlvr_train_dataset = nlvr_dataset(config['train_file'], train_transform, config['image_root'])
-        nlvr_val_dataset = nlvr_dataset(config['val_file'], test_transform, config['image_root'])
+        nlvr_train_dataset = nlvr_dataset(config['nlvr_train_file'], train_transform, config['image_root'])
+        nlvr_val_dataset = nlvr_dataset(config['nlvr_val_file'], test_transform, config['image_root'])
 
-        WIT_train_dataset = wit_train_dataset(config['train_file'], train_transform)
-        WIT_test_dataset = wit_eval_dataset(config['val_file'], test_transform)
+        WIT_train_dataset = wit_train_dataset(config['wit_train_file'], train_transform, config['wit_train_image_base_path'])
+        WIT_test_dataset = wit_eval_dataset(config['wit_val_file'], test_transform, config['wit_eval_image_base_path'])
 
         return nlvr_train_dataset, nlvr_val_dataset, WIT_train_dataset, WIT_test_dataset
 

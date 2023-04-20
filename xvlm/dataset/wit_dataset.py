@@ -22,7 +22,7 @@ from dataset.utils import pre_caption
 
 
 class wit_train_dataset(Dataset):
-    def __init__(self, ann_file, transform, max_words=80):
+    def __init__(self, ann_file, transform, base_path, max_words=80):
         self.ann = []
         for f in ann_file:
             for line in tqdm(open(f)):
@@ -33,6 +33,7 @@ class wit_train_dataset(Dataset):
         self.transform = transform
         self.max_words = max_words
         self.img_ids = {}
+        self.base_path = base_path
 
         n = 0
         for ann in self.ann:
@@ -49,7 +50,7 @@ class wit_train_dataset(Dataset):
         ann = self.ann[index]
 
         # image_str = base64.b64decode(ann['image_content'])
-        image_path = ann['image_content']
+        image_path = self.base_path + ann['image_content']
         image = Image.open(image_path).convert("RGB")
         image = self.transform(image)
         try:
@@ -61,7 +62,7 @@ class wit_train_dataset(Dataset):
 
 
 class wit_eval_dataset(Dataset):
-    def __init__(self, ann_file, transform, max_words=80):
+    def __init__(self, ann_file, transform, base_path, max_words=80):
         self.ann = []
         for line in open(ann_file, 'r'):
             ann = json.loads(line)
@@ -74,6 +75,7 @@ class wit_eval_dataset(Dataset):
         self.image = OrderedDict()
         self.txt2img = {}
         self.img2txt = {}
+        self.base_path = base_path
 
         txt_id = 0
         img_id = 0
@@ -97,7 +99,7 @@ class wit_eval_dataset(Dataset):
         return len(self.image)
 
     def __getitem__(self, index):
-        image_path = self.ann['image_content']
+        image_path = self.base_path + self.ann['image_content']
         image = Image.open(image_path).convert("RGB")
         image = self.transform(image)
 
