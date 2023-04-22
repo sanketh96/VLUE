@@ -222,6 +222,14 @@ def run_coco_captioning(args, load_capt_pretrain=False, scst=False):
               f"{f'--output_hdfs {args.output_hdfs}' if len(args.output_hdfs) else ''} --output_dir {args.output_dir} "
               f"--bs {args.bs} --seed {args.seed} --checkpoint {args.checkpoint} "
               f"{'--scst' if scst else ''}  {'--load_capt_pretrain' if load_capt_pretrain else ''} {'--evaluate' if args.evaluate else ''}")
+    
+def run_multitask(args, load_nlvr_pretrain=False):
+    dist_launch = get_dist_launch(args)
+    print("### Training NLVR2", flush=True)
+    os.system(f"{dist_launch} "
+            f"--use_env MultiTask.py --config {args.config} "
+            f"--output_dir {args.output_dir} --bs {args.bs} --checkpoint {args.checkpoint} {'--load_nlvr_pretrain' if load_nlvr_pretrain else ''} "
+            f"{'--evaluate' if args.evaluate else ''}")
 
 
 def run(args):
@@ -289,6 +297,9 @@ def run(args):
     elif args.task == 'coco_captioning_scst':  # load checkpoint of 'coco_captioning' results
         args.config = f'./configs/Captioning_scst.yaml'
         run_coco_captioning(args, scst=True)
+    
+    elif args.task == 'multitask':
+        run_multitask(args)
 
     elif args.task == 'eval_vlue_itr':
         assert os.path.exists("images/marvl")

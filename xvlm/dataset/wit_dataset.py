@@ -27,7 +27,7 @@ class wit_train_dataset(Dataset):
         for f in ann_file:
             for line in tqdm(open(f)):
                 ann = json.loads(line)
-                if not ann['caption_reference_description']:
+                if not ann['caption']:
                     continue
                 self.ann.append(ann)
         self.transform = transform
@@ -50,13 +50,13 @@ class wit_train_dataset(Dataset):
         ann = self.ann[index]
 
         # image_str = base64.b64decode(ann['image_content'])
-        image_path = self.base_path + ann['image_content']
+        image_path = self.base_path + ann['img_content']
         image = Image.open(image_path).convert("RGB")
         image = self.transform(image)
         try:
-            caption = pre_caption(ann['caption_reference_description'], self.max_words)
+            caption = pre_caption(ann['caption'], self.max_words)
         except Exception:
-            caption = ann['caption_reference_description']
+            caption = ann['caption']
 
         return image, caption, self.img_ids[ann['image_url']]
 
@@ -66,7 +66,7 @@ class wit_eval_dataset(Dataset):
         self.ann = []
         for line in open(ann_file, 'r'):
             ann = json.loads(line)
-            if not ann['caption_reference_description']:
+            if not ann['caption']:
                 continue
             self.ann.append(ann)
         self.transform = transform
@@ -86,20 +86,20 @@ class wit_eval_dataset(Dataset):
                 self.txt2img[txt_id] = cur_img_id
             else:
                 self.img2txt[img_id] = [txt_id]
-                self.image[ann['image_url']] = (img_id, ann['image_content'])
+                self.image[ann['image_url']] = (img_id, ann['img_content'])
                 self.txt2img[txt_id] = img_id
                 img_id += 1
-            if ann['caption_reference_description'] == '.':
-                self.text.append(ann['caption_reference_description'])
+            if ann['caption'] == '.':
+                self.text.append(ann['caption'])
             else:
-                self.text.append(pre_caption(ann['caption_reference_description'], self.max_words))
+                self.text.append(pre_caption(ann['caption'], self.max_words))
             txt_id += 1
 
     def __len__(self):
         return len(self.image)
 
     def __getitem__(self, index):
-        image_path = self.base_path + self.ann['image_content']
+        image_path = self.base_path + self.ann['img_content']
         image = Image.open(image_path).convert("RGB")
         image = self.transform(image)
 

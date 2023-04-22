@@ -164,7 +164,7 @@ def create_dataset(dataset, config, evaluate=False):
 
         return train_dataset, val_dataset, test_dataset
     elif dataset == 'multitask':
-        nlvr_test_dataset = nlvr_dataset(config['test_file'], test_transform, config['image_root'])
+        nlvr_test_dataset = nlvr_dataset(config['nlvr_test_file'], test_transform, config['image_root'])
         if evaluate:
             # Because we only want to evaluate on NLVR2, since WIT is our auxilliary task
             return None, None, nlvr_test_dataset
@@ -175,7 +175,7 @@ def create_dataset(dataset, config, evaluate=False):
         WIT_train_dataset = wit_train_dataset(config['wit_train_file'], train_transform, config['wit_train_image_base_path'])
         WIT_test_dataset = wit_eval_dataset(config['wit_val_file'], test_transform, config['wit_eval_image_base_path'])
 
-        return nlvr_train_dataset, nlvr_val_dataset, WIT_train_dataset, WIT_test_dataset
+        return nlvr_train_dataset, nlvr_val_dataset, nlvr_test_dataset, WIT_train_dataset, WIT_test_dataset
 
     else:
         raise NotImplementedError(f"dataset == {dataset}")

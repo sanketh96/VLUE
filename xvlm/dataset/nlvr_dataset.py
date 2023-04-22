@@ -3,6 +3,7 @@ import os
 from torch.utils.data import Dataset
 from PIL import Image
 from dataset.utils import pre_caption
+import random
 
 
 class nlvr_dataset(Dataset):
@@ -13,6 +14,10 @@ class nlvr_dataset(Dataset):
         self.transform = transform
         self.image_root = image_root
         self.max_words = 30
+        if len(self.ann) > 10000:
+            self.subsample_n = 100
+            self.ann = random.sample(self.ann, self.subsample_n)
+            print("Size after sampling : ", len(self.ann))
         
     def __len__(self):
         return len(self.ann)

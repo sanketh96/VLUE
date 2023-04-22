@@ -1,12 +1,12 @@
-nlvr_train_file: ['data/finetune/nlvr_train.json']
-nlvr_val_file: ['data/finetune/nlvr_dev.json']
-nlvr_test_file: ['data/finetune/nlvr_test.json']
+nlvr_train_file: ['/projects/metis2/anubha/ADL/final_project/git/xvlm/data/finetune/nlvr_en/nlvr_train.json']
+nlvr_val_file: ['/projects/metis2/anubha/ADL/final_project/git/xvlm/data/finetune/nlvr_en/nlvr_dev.json']
+nlvr_test_file: ['/projects/metis2/anubha/ADL/final_project/git/xvlm/data/finetune/nlvr_en/nlvr_test.json']
 
-image_root: 'images/nlvr2/'
+image_root: '/projects/metis2/anubha/ADL/final_project/git/xvlm/images/nlvr2'
 
-wit_train_file:  ['data/wit/annotations-bs64/train_en.jsonl']
+wit_train_file:  ['/projects/metis2/anubha/ADL/final_project/git/xvlm/data/wit/df_en_100.jsonl']
 
-wit_val_file: 'data/wit/annotations-bs64/val_en.jsonl'
+wit_val_file: '/projects/metis2/anubha/ADL/final_project/git/xvlm/data/wit/df_en_100.jsonl'
 
 wit_test_file: {'ar': 'data/wit/annotations-bs64/test_ar.jsonl',
             'bg': 'data/wit/annotations-bs64/test_bg.jsonl',
@@ -31,8 +31,8 @@ gmt_test_file: {'ar': 'data/wit/annotations_machine-translate-bs64/test_ar_gmt.j
             'tr': 'data/wit/annotations_machine-translate-bs64/test_tr_gmt.jsonl',
             'vi': 'data/wit/annotations_machine-translate-bs64/test_vi_gmt.jsonl',}
 
-wit_train_image_base_path: ''
-wit_eval_image_base_path: ''
+wit_train_image_base_path: '/projects/metis2/anubha/ADL/final_project/git/xvlm/data/wit/sampled_images/en/'
+wit_eval_image_base_path: '/projects/metis2/anubha/ADL/final_project/git/xvlm/data/wit/sampled_images/en/'
 
 ## Vision Encoder
 vision_config: 'configs/config_swinB_384.json'
@@ -49,7 +49,7 @@ patch_size: 32
 ## Text Encoder
 use_roberta: False
 text_config: 'configs/config_bert.json'  # ['configs/config_bert.json', 'configs/config_roberta.json']
-text_encoder: 'data/bert-base-uncased'  # ['data/bert-base-uncased', 'data/roberta-base']
+text_encoder: 'bert-base-uncased'  # ['data/bert-base-uncased', 'data/roberta-base']
 
 
 ## Training
