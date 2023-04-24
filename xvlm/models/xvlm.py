@@ -374,14 +374,21 @@ class XVLMBase(nn.Module):
         assert image_feat.size(-1) == self.embed_dim
         assert text_feat.size(-1) == self.embed_dim
 
-        image_feat_all = allgather(image_feat, torch.distributed.get_rank(), torch.distributed.get_world_size())
-        text_feat_all = allgather(text_feat, torch.distributed.get_rank(), torch.distributed.get_world_size())
+        # TODO: check if this is correct
+        # image_feat_all = allgather(image_feat, torch.distributed.get_rank(), torch.distributed.get_world_size())
+        # text_feat_all = allgather(text_feat, torch.distributed.get_rank(), torch.distributed.get_world_size())
+        image_feat_all = image_feat
+        text_feat_all = text_feat
         logits = image_feat_all @ text_feat_all.t() / self.temp
 
         bsz = image_feat_all.shape[0]
 
+        logits = logits.reshape(bsz) # TODO: check if this is correct
+
         if idx is None:
-            labels = torch.arange(bsz, device=image_feat.device)
+            # TODO: check if this is correct
+            # labels = torch.arange(bsz, device=image_feat.device)
+            labels = torch.arange(bsz, device=image_feat.device).float()
             loss_i2t = F.cross_entropy(logits, labels)
             loss_t2i = F.cross_entropy(logits.t(), labels)
 

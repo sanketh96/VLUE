@@ -10,8 +10,10 @@ import torch.nn.functional as F
 class MultiTask(XVLMBase):
 
     def __init__(self, config):
-        config_text = RobertaConfig.from_json_file(config['text_config']) \
-            if config['use_roberta'] else BertConfig.from_json_file(config['text_config'])
+        if config['use_roberta']:
+            config_text = RobertaConfig.from_json_file(config['text_config'])
+        else:
+            config_text = BertConfig.from_json_file(config['text_config'])
         self.num_text_layers = config_text.fusion_layer
         self.num_cross_layers = config_text.num_hidden_layers - config_text.fusion_layer
         config_text.num_hidden_layers = self.num_text_layers + 2 * self.num_cross_layers
@@ -33,27 +35,34 @@ class MultiTask(XVLMBase):
         print("missing_keys: ", [p for p in msg.missing_keys if 'vision_encoder' not in p])
         print("unexpected_keys: ", msg.unexpected_keys)
         
-    def forward(self,  image, text_ids, text_atts, targets, task_id, train=True, idx=None):
+    def forward(self,  image, text_ids, text_atts, targets, task, train=True, idx=None):
         image_embeds, image_atts = self.get_vision_embeds(image)
-        if task_id == 0:
+
+        # Classification
+        if task == 'classification': # NLVR
             image0_embeds, image1_embeds = torch.split(image_embeds, targets.size(0))
 
             output_cls = self.get_cross_embeds([image0_embeds, image1_embeds],
-                                               [image_atts[:image0_embeds.size(0)], image_atts[image0_embeds.size(0):]],
+                                               [image_atts[:image0_embeds.size(0)],image_atts[image0_embeds.size(0):]],
                                                text_ids=text_ids, text_atts=text_atts)[:, 0, :]
 
             prediction = self.cls_head(output_cls)
 
             return F.cross_entropy(prediction, targets) if train else prediction
-        elif task_id == 1:
+        
+        # Contrastive
+        elif task == 'contrastive': # WIT (Image Retriveal)
             text_embeds = self.get_text_embeds(text_ids, text_atts)
+
+            with torch.no_grad():
+                self.temp.clamp_(0.001, 0.5)
 
             image_feat, text_feat = self.get_features(image_embeds, text_embeds)
             loss_itc = self.get_contrastive_loss(image_feat, text_feat, idx=idx)
-            loss_itm = self.get_matching_loss(image_embeds, image_atts, image_feat, text_embeds, text_atts, text_feat,
-                                              idx=idx)
+            loss_itm = self.get_matching_loss(image_embeds, image_atts, image_feat,
+                                              text_embeds, text_atts, text_feat, idx=idx)
 
-            return loss_itc, loss_itm
+            return loss_itc, loss_itm  # Image-Text Contrastive, Image-Text Matching
 
     def share_cross_attention(self, model):
         for i in range(self.num_cross_layers):

@@ -1,0 +1,8 @@
+xvlm/data/
+xvlm/configs/
+data/
+
+*.json
+*.yaml
+*.pth
+.*

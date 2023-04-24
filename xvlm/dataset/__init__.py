@@ -14,6 +14,8 @@ from dataset.wit_dataset import wit_train_dataset, wit_eval_dataset
 
 from dataset.randaugment import RandomAugment
 
+from torch.utils.data import Dataset, Subset
+
 
 def create_dataset(dataset, config, evaluate=False):
     normalize = transforms.Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711))
@@ -169,13 +171,18 @@ def create_dataset(dataset, config, evaluate=False):
             # Because we only want to evaluate on NLVR2, since WIT is our auxilliary task
             return None, None, nlvr_test_dataset
 
-        nlvr_train_dataset = nlvr_dataset(config['nlvr_train_file'], train_transform, config['image_root'])
-        nlvr_val_dataset = nlvr_dataset(config['nlvr_val_file'], test_transform, config['image_root'])
+        NLVR_train_dataset = nlvr_dataset(config['nlvr_train_file'], train_transform, config['image_root'])
+        NLVR_val_dataset = nlvr_dataset(config['nlvr_val_file'], test_transform, config['image_root'])
 
         WIT_train_dataset = wit_train_dataset(config['wit_train_file'], train_transform, config['wit_train_image_base_path'])
         WIT_test_dataset = wit_eval_dataset(config['wit_val_file'], test_transform, config['wit_eval_image_base_path'])
 
-        return nlvr_train_dataset, nlvr_val_dataset, nlvr_test_dataset, WIT_train_dataset, WIT_test_dataset
+    
+        length = min(len(NLVR_train_dataset), len(WIT_train_dataset))
+        WIT_train_dataset = Subset(WIT_train_dataset, range(length))
+        NLVR_train_dataset = Subset(NLVR_train_dataset, range(length))
+
+        return NLVR_train_dataset, NLVR_val_dataset, nlvr_test_dataset, WIT_train_dataset, WIT_test_dataset
 
     else:
         raise NotImplementedError(f"dataset == {dataset}")
