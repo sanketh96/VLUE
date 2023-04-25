@@ -53,11 +53,10 @@ def get_dist_launch(args):  # some examples
                "--nnodes=1 "
 
     elif args.dist.startswith('gpu'):  # use one gpu, --dist "gpu0"
-        num = int(args.dist[3:])
-        assert 0 <= num <= 8
+        num = torch.cuda.current_device()
+        #assert 0 <= num <= 8
         return "CUDA_VISIBLE_DEVICES={:} WORLD_SIZE=1 python3 -m torch.distributed.launch --nproc_per_node=1 " \
                "--nnodes=1 ".format(num)
-
     else:
         raise ValueError
 
