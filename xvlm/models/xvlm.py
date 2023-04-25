@@ -383,12 +383,8 @@ class XVLMBase(nn.Module):
 
         bsz = image_feat_all.shape[0]
 
-        logits = logits.reshape(bsz) # TODO: check if this is correct
-
         if idx is None:
-            # TODO: check if this is correct
-            # labels = torch.arange(bsz, device=image_feat.device)
-            labels = torch.arange(bsz, device=image_feat.device).float()
+            labels = torch.arange(bsz, device=image_feat.device)
             loss_i2t = F.cross_entropy(logits, labels)
             loss_t2i = F.cross_entropy(logits.t(), labels)
 

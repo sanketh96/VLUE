@@ -47,21 +47,27 @@ def train(model, nlvr_data_loader, wit_data_loader, optimizer, tokenizer, epoch,
 
     for nlvr_elements, wit_elements in zip(nlvr_iterator, wit_iterator):
 
-        nlvr_image0, nlvr_image1, nlvr_text, nlvr_targets = nlvr_elements
         wit_image, wit_text, wit_targets = wit_elements
 
-        images = torch.cat([nlvr_image0, nlvr_image1], dim=0)
-        images = images.to(device)
-        targets = nlvr_targets.to(device)   
-        text_inputs = tokenizer(nlvr_text, padding='longest', return_tensors="pt").to(device)  
-        
-        # TODO: add WIT data to the model
-
+        images = wit_image.to(device)
+        targets = wit_targets.to(device)   
+        text_inputs = tokenizer(wit_text, padding='longest', return_tensors="pt").to(device)  
         loss_itc, loss_itm = model(image=images, text_ids=text_inputs.input_ids,
                                    text_atts=text_inputs.attention_mask, targets=targets,
                                    task='contrastive', train=True)
         
-        loss = loss_itc + loss_itm
+        ####### NLVR #######
+        nlvr_image0, nlvr_image1, nlvr_text, nlvr_targets = nlvr_elements
+        images = torch.cat([nlvr_image0, nlvr_image1], dim=0)
+        images = images.to(device)
+        targets = nlvr_targets.to(device)   
+        text_inputs = tokenizer(nlvr_text, padding='longest', return_tensors="pt").to(device)  
+
+        loss_ce = model(image=images, text_ids=text_inputs.input_ids,
+                                   text_atts=text_inputs.attention_mask, targets=targets,
+                                   task='classification', train=True)
+
+        loss = loss_itc + loss_itm + loss_ce
         
         optimizer.zero_grad()
         loss.backward()
