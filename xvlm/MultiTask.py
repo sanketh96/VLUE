@@ -44,7 +44,10 @@ def evaluate(model, data_loader, tokenizer, device):
         images, targets = images.to(device), targets.to(device)   
         text_inputs = tokenizer(text, padding='longest', return_tensors="pt").to(device)
 
-        prediction = model(images, text_inputs.input_ids, text_inputs.attention_mask, targets=targets, train=False)
+        # prediction = model(images, text_inputs.input_ids, text_inputs.attention_mask, targets=targets, train=False)
+        prediction = model(image=images, text_ids=text_inputs.input_ids,
+                                   text_atts=text_inputs.attention_mask, targets=targets,
+                                   task='classification', train=False)
  
         _, pred_class = prediction.max(1)
         accuracy = (targets == pred_class).sum() / targets.size(0)
@@ -225,8 +228,8 @@ def main(args, config):
                 nlvr_train_loader.sampler.set_epoch(epoch)
                 wit_train_loader.sampler.set_epoch(epoch)
             train_stats = train(model, nlvr_train_loader, wit_train_loader, optimizer, tokenizer, epoch, device, lr_scheduler)
-            val_stats = evaluate(model, nlvr_train_loader, tokenizer, device)
-            test_stats = evaluate(model, nlvr_train_loader, tokenizer, device)
+            val_stats = evaluate(model, nlvr_val_loader, tokenizer, device)
+            test_stats = evaluate(model, nlvr_test_loader, tokenizer, device)
 
             if utils.is_main_process():
                 log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
