@@ -30,6 +30,31 @@ from scheduler import create_scheduler
 from optim import create_optimizer
 
 
+@torch.no_grad()
+def evaluate(model, data_loader, tokenizer, device):
+    model.eval()
+            
+    metric_logger = utils.MetricLogger(delimiter="  ")
+
+    header = 'Evaluation:'
+    print_freq = 50
+
+    for image0, image1, text, targets in metric_logger.log_every(data_loader, print_freq, header):
+        images = torch.cat([image0, image1], dim=0)
+        images, targets = images.to(device), targets.to(device)   
+        text_inputs = tokenizer(text, padding='longest', return_tensors="pt").to(device)
+
+        prediction = model(images, text_inputs.input_ids, text_inputs.attention_mask, targets=targets, train=False)
+ 
+        _, pred_class = prediction.max(1)
+        accuracy = (targets == pred_class).sum() / targets.size(0)
+        
+        metric_logger.meters['acc'].update(accuracy.item(), n=image0.size(0))
+                
+    # gather the stats from all processes
+    metric_logger.synchronize_between_processes()
+    print("Averaged stats:", metric_logger.global_avg())   
+    return {k: "{:.4f}".format(meter.global_avg) for k, meter in metric_logger.meters.items()}
 
 def train(model, nlvr_data_loader, wit_data_loader, optimizer, tokenizer, epoch, device, scheduler):
     model.train()
@@ -200,8 +225,8 @@ def main(args, config):
                 nlvr_train_loader.sampler.set_epoch(epoch)
                 wit_train_loader.sampler.set_epoch(epoch)
             train_stats = train(model, nlvr_train_loader, wit_train_loader, optimizer, tokenizer, epoch, device, lr_scheduler)
-            val_stats = evaluate(model, val_loader, tokenizer, device)
-            test_stats = evaluate(model, test_loader, tokenizer, device)
+            val_stats = evaluate(model, nlvr_train_loader, tokenizer, device)
+            test_stats = evaluate(model, nlvr_train_loader, tokenizer, device)
 
             if utils.is_main_process():
                 log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
