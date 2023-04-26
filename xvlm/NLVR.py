@@ -22,6 +22,7 @@ from models.model_nlvr import XVLM
 from models.tokenization_bert import BertTokenizer
 from models.tokenization_roberta import RobertaTokenizer
 
+import pandas as pd
 import utils
 from dataset import create_dataset, create_sampler, create_loader
 from scheduler import create_scheduler
@@ -69,7 +70,10 @@ def evaluate(model, data_loader, tokenizer, device):
 
     header = 'Evaluation:'
     print_freq = 50
-
+    predictions = []
+    input_texts = []
+    all_targets = []
+    matches = []
     for image0, image1, text, targets in metric_logger.log_every(data_loader, print_freq, header):
         images = torch.cat([image0, image1], dim=0)
         images, targets = images.to(device), targets.to(device)   
@@ -79,13 +83,21 @@ def evaluate(model, data_loader, tokenizer, device):
  
         _, pred_class = prediction.max(1)
         accuracy = (targets == pred_class).sum() / targets.size(0)
-        
+        input_texts.extend(text)
+        predictions.extend(pred_class.tolist())
+        all_targets.extend(targets.tolist())
+        matches.extend((targets == pred_class).tolist())
         metric_logger.meters['acc'].update(accuracy.item(), n=image0.size(0))
                 
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
-    print("Averaged stats:", metric_logger.global_avg())   
-    return {k: "{:.4f}".format(meter.global_avg) for k, meter in metric_logger.meters.items()}
+    print("Averaged stats:", metric_logger.global_avg())
+    df = pd.DataFrame()
+    df["text"] = input_texts
+    df["predictions"] = predictions
+    df["label"] = all_targets
+    df["matches"] = matches
+    return {k: "{:.4f}".format(meter.global_avg) for k, meter in metric_logger.meters.items()}, df
     
     
 def main(args, config):
@@ -126,6 +138,7 @@ def main(args, config):
     start_time = time.time()
 
     if args.evaluate:
+        path_test = "output/eval/test.csv"
         print("Start evaluating")
         if args.distributed:
             num_tasks = utils.get_world_size()
@@ -138,13 +151,13 @@ def main(args, config):
                                     num_workers=[4], is_trains=[False],
                                     collate_fns=[None])[0]
 
-        test_stats = evaluate(model, test_loader, tokenizer, device)
-
+        test_stats, test_df = evaluate(model, test_loader, tokenizer, device)
+        test_df.to_csv(path_test, index=False)
         if utils.is_main_process():
             log_stats = {**{f'test_{k}': v for k, v in test_stats.items()}}
             print(log_stats)
 
-        dist.barrier()
+        # dist.barrier()
 
     else:
         print("Start training")
@@ -185,8 +198,8 @@ def main(args, config):
             if args.distributed:
                 train_loader.sampler.set_epoch(epoch)
             train_stats = train(model, train_loader, optimizer, tokenizer, epoch, device, lr_scheduler)
-            val_stats = evaluate(model, val_loader, tokenizer, device)
-            test_stats = evaluate(model, test_loader, tokenizer, device)
+            val_stats, _ = evaluate(model, val_loader, tokenizer, device)
+            test_stats, _ = evaluate(model, test_loader, tokenizer, device)
 
             if utils.is_main_process():
                 log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
